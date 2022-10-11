@@ -1,0 +1,170 @@
+list1 = """
+Allegiance: Ogor Mawtribes
+- Mawtribe: Bloodgullet
+- Grand Strategy: Beast Master
+- Triumphs: Inspired
+
+Leaders
+Kragnos, The End of Empires (720)
+Frostlord on Stonehorn (430)
+- General
+- Command Trait: Nice Drop of the Red Stuff!
+- Artefact: Splatter-cleaver
+- Mount Trait: Metalcruncher
+Huskard on Stonehorn (340)*
+- Blood Vulture
+
+Battleline
+2 x Mournfang Pack (160)*
+- Gargant Hackers
+2 x Mournfang Pack (160)*
+- Gargant Hackers
+2 x Mournfang Pack (160)*
+- Gargant Hackers
+
+Core Battalions
+*Battle Regiment
+
+Total: 1970 / 2000
+Reinforced Units: 0 / 4
+Allies: 0 / 400
+Wounds: 79
+Drops: 3 
+"""
+
+list2 = """
+Allegiance: Ogor Mawtribes
+- Mawtribe: Boulderhead
+- Grand Strategy: Beast Master
+- Triumphs: Bloodthirsty
+
+Leaders
+Huskard on Thundertusk (335)*
+- General
+- Blood Vulture
+- Command Trait: Lord of Beasts
+- Artefact: Amulet of Destiny (Universal Artefact)
+- Mount Trait: Rimefrost Hide
+- Prayer: Pulverising Hailstorm
+Frostlord on Stonehorn (430)
+- Artefact: Brand of the Svard
+- Mount Trait: Metalcruncher
+Frostlord on Stonehorn (430)
+- Mount Trait: Black Clatterhorn
+Firebelly (125)*
+- Lore of the Sun-Eater: Billowing Ash
+Hrothgorn (170)*
+
+Battleline
+3 x Icefall Yhetees (120)**
+3 x Icefall Yhetees (120)**
+6 x Ogor Gluttons (250)**
+- Clubs or Blades with Iron Fists
+
+Units
+3 x Hrothgorn's Mantrappers (0)*
+
+Core Battalions
+*Warlord
+**Hunters of the Heartlands
+
+Additional Enhancements
+Artefact
+
+Total: 1980 / 2000
+Reinforced Units: 0 / 4
+Allies: 0 / 400
+Wounds: 103
+Drops: 9 
+"""
+
+list3 = """
+Allegiance: Ogor Mawtribes
+- Mawtribe: Bloodgullet
+- Grand Strategy: Hold the Line
+- Triumphs: Inspired
+
+Leaders
+Frostlord on Stonehorn (430)*
+- General
+- Command Trait: Nice Drop of the Red Stuff!
+- Artefact: Splatter-cleaver
+- Mount Trait: Metalcruncher
+Butcher (135)*
+- Tenderiser
+- Bloodgullet 2nd Spell: Blood Feast
+- Lore of Gutmagic: Ribcracker
+Butcher (135)*
+- Cleaver
+- Artefact: Wizardflesh Apron
+- Bloodgullet 2nd Spell: Molten Entrails
+- Universal Spell Lore: Levitate
+
+Battleline
+12 x Ogor Gluttons (500)**
+- Clubs or Blades with Iron Fists
+- Reinforced x 1
+2 x Mournfang Pack (160)*
+- Culling Clubs or Prey Hackers with Iron Fists
+2 x Mournfang Pack (160)**
+- Culling Clubs or Prey Hackers with Iron Fists
+
+Units
+8 x Ironguts (470)**
+- Reinforced x 1
+
+Core Battalions
+*Warlord
+**Hunters of the Heartlands
+
+Additional Enhancements
+Artefact
+
+Total: 1990 / 2000
+Reinforced Units: 2 / 4
+Allies: 0 / 400
+Wounds: 131
+Drops: 7 
+"""
+
+list4 = """
+Allegiance: Ogor Mawtribes
+- Mawtribe: Boulderhead
+- Grand Strategy: Beast Master
+- Triumphs: Inspired
+
+Leaders
+Butcher (135)
+- Cleaver
+- Lore of Gutmagic: Molten Entrails
+Frostlord on Stonehorn (430)
+- Mount Trait: Metalcruncher
+Huskard on Stonehorn (340)
+- Blood Vulture
+- Artefact: Brand of the Svard 
+- Mount Trait: Old Granitetooth
+Frostlord on Stonehorn (430)
+- General
+- Command Trait: Lord of Beasts 
+- Mount Trait: Belligerent Charger
+
+Units
+4 x Mournfang Pack (320)*
+- Culling Clubs or Prey Hackers with Iron Fists
+2 x Mournfang Pack (160)*
+- Culling Clubs or Prey Hackers with Iron Fists
+2 x Mournfang Pack (160)*
+- Culling Clubs or Prey Hackers with Iron Fists
+
+Core Battalions
+*Hunters of the Heartlands
+
+Additional Enhancements
+Artefact
+
+Total: 1975 / 2000
+Reinforced Units: 1 / 4
+Allies: 0 / 400
+Wounds: ?
+Drops: 7 
+"""
