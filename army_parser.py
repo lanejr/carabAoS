@@ -1,4 +1,5 @@
 import unittest
+import itertools
 from army_flattener import *
 from parsec import *
 
@@ -7,6 +8,17 @@ from parsec import *
 # Faction - anything starting 'Allegiance: '
 # Warscroll - beneath 'Leaders', 'Battleline', etc; anything _not_ starting '- '
 # Enhancement - beneath 'Leaders', 'Battleline', etc; anything starting '- [a-z]*: '
+
+@dataclass
+class ParsedAllegiance:
+    """
+    A class representing a parsed allegiance and its features.
+
+    An intermediary representation before further processing.
+    """
+
+    name: str
+    features: list[str]
 
 @dataclass
 class ParsedWarscroll:
@@ -22,19 +34,25 @@ class ParsedWarscroll:
 rest_of_line: Parser = regex('[^\r\n]+')
 whitespace: Parser = regex('[^\S\r\n]+')
 new_line: Parser = regex('\r?\n')
+bullet: Parser = string("- ")
 
-
-def parse_faction(input: str) -> Faction:
+@generate
+def parse_faction():
+    # parse the name of the allegiance
     prefix: Parser = string("Allegiance: ")
-    parser: Parser = spaces() >> prefix >> rest_of_line << spaces()
-    parsed: str = parser.parse(input)
-    return Faction(parsed)
+    name = yield whitespace >> prefix >> rest_of_line << new_line
+
+    # parse any listed features
+    prefix: Parser = whitespace + bullet
+    features = yield sepBy(prefix >> rest_of_line, new_line)
+
+    return ParsedAllegiance(name, features)
 
 @generate
 def parse_warscrolls():
     # TODO: do more here? some conversion?
     warscrolls = yield many(section)
-    return warscrolls 
+    return list(itertools.chain(*warscrolls))
 
 @generate
 def header():
@@ -63,7 +81,7 @@ def warscroll():
     name = yield whitespace >> rest_of_line << new_line
 
     # parse any listed enhancements
-    prefix: Parser = whitespace + string("- ")
+    prefix: Parser = whitespace + bullet
     enhancements = yield sepBy(prefix >> rest_of_line, new_line)
 
     return ParsedWarscroll(name, enhancements)
@@ -77,8 +95,17 @@ class TestArmyParser(unittest.TestCase):
             - Grand Strategy: Beast Master
             - Triumphs: Inspired
         """
-        result: Faction = parse_faction(input_str)
-        expected: Faction = Faction("Ogor Mawtribes")
+
+        expected: ParsedAllegiance = ParsedAllegiance(
+            name="Ogor Mawtribes",
+            features=[
+                "Mawtribe: Bloodgullet",
+                "Grand Strategy: Beast Master",
+                "Triumphs: Inspired",
+            ]
+        )
+        result: ParsedAllegiance = parse_faction.parse(input_str)
+
         self.assertEqual(result, expected)
 
     def test_parse_warscrolls(self) -> None:
@@ -102,19 +129,37 @@ class TestArmyParser(unittest.TestCase):
             - Gargant Hackers
         """
 
-        parser = parse_warscrolls
-        parsed = parser.parse(input_str)
-        print("finished")
-        print(parsed)
-
-        #result = parse_warscrolls(input_str)
-        expected: list[Warscroll] = [
-            Warscroll("Kragnos, The End of Empires", 1),
-            Warscroll("Frostlord on Stonehorn", 1),
-            Warscroll("Huskard on Stonehorn", 1),
-            Warscroll("Mournfang Pack", 3),
+        expected: list[ParsedWarscroll] = [
+            ParsedWarscroll("Kragnos, The End of Empires (720)", []),
+            ParsedWarscroll(
+                name = "Frostlord on Stonehorn (430)",
+                enhancements = [
+                    "General",
+                    "Command Trait: Nice Drop of the Red Stuff!",
+                    "Artefact: Splatter-cleaver",
+                    "Mount Trait: Metalcruncher",
+                ],
+            ),
+            ParsedWarscroll(
+                name = "Huskard on Stonehorn (340)*",
+                enhancements = ["Blood Vulture"],
+            ),
+            ParsedWarscroll(
+                name = "2 x Mournfang Pack (160)*",
+                enhancements = ["Gargant Hackers"],
+            ),
+            ParsedWarscroll(
+                name = "2 x Mournfang Pack (160)*",
+                enhancements = ["Gargant Hackers"],
+            ),
+            ParsedWarscroll(
+                name = "2 x Mournfang Pack (160)*",
+                enhancements = ["Gargant Hackers"],
+            ),
         ]
-        #self.assertEqual(result, expected)
+        result = parse_warscrolls.parse(input_str)
+
+        self.assertEqual(result, expected)
 
 if __name__ == '__main__':
     unittest.main()
