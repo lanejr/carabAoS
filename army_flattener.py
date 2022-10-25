@@ -47,12 +47,12 @@ def flatten(army_list: str) -> FlatArmyList:
     warscrolls: list[Warscroll] = []
     enhancements: list[Enhancement] = []
 
-    flat_list = FlatArmyList(faction, warscrolls, enhancements)
+    flat_list: FlatArmyList = FlatArmyList(faction, warscrolls, enhancements)
     return flat_list
 
 class TestWarscrollParser(unittest.TestCase):
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         input_str: str = """\
             Allegiance: Ogor Mawtribes
             - Mawtribe: Bloodgullet
