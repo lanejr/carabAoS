@@ -4,7 +4,7 @@ import unittest
 
 ### Data classes ###
 
-@dataclass
+@dataclass(frozen = True)
 class Faction:
     """
     A class representing the faction of the army list.
@@ -16,7 +16,7 @@ class Faction:
 
     name: str
 
-@dataclass
+@dataclass(frozen = True)
 class Warscroll:
     """ 
     A class representing a warscroll and its number of occurrences.
@@ -28,7 +28,7 @@ class Warscroll:
     name: str
     count: int
 
-@dataclass
+@dataclass(frozen = True)
 class Enhancement:
     """
     A class representing an enhancement and its number of occurrences.
@@ -40,7 +40,7 @@ class Enhancement:
     name: str
     count: int
 
-@dataclass
+@dataclass(frozen = True)
 class FlatArmyList:
     """
     A class representing a 'flattened' army list.
@@ -121,7 +121,7 @@ def _convert_warscrolls(
 
 ### Tests ###
 
-class __TestWarscrollParser(unittest.TestCase):
+class __TestArmyFlattener(unittest.TestCase):
 
     def test_flatten(self) -> None:
         input_str: str = """\
@@ -158,22 +158,21 @@ class __TestWarscrollParser(unittest.TestCase):
             Drops: 3
         """
 
-        faction: Faction = Faction("Ogor Mawtribes")
+        expected: FlatArmyList = FlatArmyList(
+            faction = Faction("Ogor Mawtribes"),
+            warscrolls = [
+                Warscroll("Kragnos, The End of Empires", 1),
+                Warscroll("Frostlord on Stonehorn", 1),
+                Warscroll("Huskard on Stonehorn", 1),
+                Warscroll("Mournfang Pack", 3),
+            ],
+            enhancements = [
+                Enhancement("Nice Drop of the Red Stuff!", 1),
+                Enhancement("Splatter-cleaver", 1),
+                Enhancement("Metalcruncher", 1),
+            ],
+        )
 
-        warscrolls: list[Warscroll] = [
-            Warscroll("Kragnos, The End of Empires", 1),
-            Warscroll("Frostlord on Stonehorn", 1),
-            Warscroll("Huskard on Stonehorn", 1),
-            Warscroll("Mournfang Pack", 3),
-        ]
-
-        enhancements: list[Enhancement] = [
-            Enhancement("Nice Drop of the Red Stuff!", 1),
-            Enhancement("Splatter-cleaver", 1),
-            Enhancement("Metalcruncher", 1),
-        ]
-
-        expected: FlatArmyList = FlatArmyList(faction, warscrolls, enhancements)
         result: FlatArmyList = flatten(input_str)
 
         self.assertEqual(result, expected)
@@ -195,6 +194,20 @@ class __TestWarscrollParser(unittest.TestCase):
                 features = ["Blood Vulture"],
             ),
             parser.ParsedWarscroll(
+                name = "Butcher",
+                features = [
+                    "Lore of Gutmagic: Ribcracker",
+                    "Bloodgullet 2nd Spell: Molten Entrails"
+                ],
+            ),
+            parser.ParsedWarscroll(
+                name = "Butcher",
+                features = [
+                    "Lore of Gutmagic: Greasy Deluge",
+                    "Bloodgullet 2nd Spell: Ribcracker"
+                ],
+            ),
+            parser.ParsedWarscroll(
                 name = "Mournfang Pack",
                 features = ["Gargant Hackers"],
             ),
@@ -212,6 +225,9 @@ class __TestWarscrollParser(unittest.TestCase):
             Enhancement("Nice Drop of the Red Stuff!", 1),
             Enhancement("Splatter-cleaver", 1),
             Enhancement("Metalcruncher", 1),
+            Enhancement("Ribcracker", 2),
+            Enhancement("Molten Entrails", 1),
+            Enhancement("Greasy Deluge", 1),
         ]
         result: list[Enhancement] = _convert_enhancements(warscrolls)
 

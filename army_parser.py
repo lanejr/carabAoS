@@ -5,7 +5,7 @@ from parsec import *
 
 ### Data classes ###
 
-@dataclass
+@dataclass(frozen = True)
 class ParsedAllegiance:
     """
     A class representing a parsed allegiance and its features.
@@ -16,7 +16,7 @@ class ParsedAllegiance:
     name: str
     features: list[str]
 
-@dataclass
+@dataclass(frozen = True)
 class ParsedWarscroll:
     """
     A class representing a parsed warscroll and its features.
@@ -34,13 +34,13 @@ class ParsedWarscroll:
 _rest_of_line: Parser = regex('[^\r\n]+')
 
 # parse all non line ending whitespace
-_whitespace: Parser = regex('[^\S\r\n]+')
+_whitespace: Parser = regex('[^\S\r\n]*')
 
 # parse a new line
 _new_line: Parser = regex('\r?\n')
 
-# parse a bullet point
-_bullet: Parser = string("- ")
+# parse a bullet point (or its similar but easily confused alternative)
+_bullet: Parser = string("- ") ^ string("– ")
 
 
 ### Public ###
@@ -121,8 +121,11 @@ def _header():
 
 @generate
 def _section():
+    # sections are usually separated by new lines
+    yield many(_new_line)
+
     # parse the section header
-    section_header = yield spaces() >> _header << _new_line
+    section_header = yield _whitespace >> _header << _new_line
 
     # parse the listed warscroll(s)
     warscrolls = yield many1(_warscroll)
@@ -132,11 +135,11 @@ def _section():
 def _warscroll():
     # parse the name of the warscroll
     count: Parser = regex('(\d+ x )?')
-    to_end: Parser = regex('[^\(]+')
+    to_end: Parser = regex('[^\(\r\n]+')
     name = yield _whitespace >> count >> to_end << _rest_of_line << _new_line
 
     # drop the trailing space
-    name = name[:len(name)-1]
+    name = name[:len(name) - 1]
 
     # parse any listed features
     prefix: Parser = _whitespace + _bullet
