@@ -2,8 +2,6 @@
 
 A toolbox for solving a variety of niche problems related to AoS (Warhammer: Age of Sigmar).
 
-[TOC]
-
 ## Summary
 
 ### What is in the toolbox?
