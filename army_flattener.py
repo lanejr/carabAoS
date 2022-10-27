@@ -2,6 +2,8 @@ from dataclasses import dataclass
 import army_parser as parser
 import unittest
 
+### Data classes ###
+
 @dataclass
 class Faction:
     """
@@ -53,6 +55,8 @@ class FlatArmyList:
     enhancements: list[Enhancement]
 
 
+### Public ###
+
 def flatten(army_list: str) -> FlatArmyList:
     """
     Parse an army list string into a flattened army list data class.
@@ -67,6 +71,9 @@ def flatten(army_list: str) -> FlatArmyList:
     enhs: list[Enhancement] = _convert_enhancements(parsed_warscrolls)
 
     return FlatArmyList(faction, wars, enhs)
+
+
+### Private ###
 
 def _convert_enhancements(
     warscrolls: list[parser.ParsedWarscroll]
@@ -168,8 +175,6 @@ class __TestWarscrollParser(unittest.TestCase):
 
         expected: FlatArmyList = FlatArmyList(faction, warscrolls, enhancements)
         result: FlatArmyList = flatten(input_str)
-
-        print(expected == result)
 
         self.assertEqual(result, expected)
 
