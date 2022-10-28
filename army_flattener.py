@@ -16,7 +16,7 @@ class Faction:
 
     name: str
 
-@dataclass(frozen = True)
+@dataclass(frozen = True, order = True)
 class Warscroll:
     """ 
     A class representing a warscroll and its number of occurrences.
@@ -28,7 +28,7 @@ class Warscroll:
     name: str
     count: int
 
-@dataclass(frozen = True)
+@dataclass(frozen = True, order = True)
 class Enhancement:
     """
     A class representing an enhancement and its number of occurrences.
@@ -172,7 +172,6 @@ class __TestArmyFlattener(unittest.TestCase):
                 Enhancement("Metalcruncher", 1),
             ],
         )
-
         result: FlatArmyList = flatten(input_str)
 
         self.assertEqual(result, expected)
