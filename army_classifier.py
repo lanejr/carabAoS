@@ -123,9 +123,8 @@ def _distance(
 
     return war_dist * war_weight + enh_dist * enh_weight
 
-# TODO: make type hints happy
-T = TypeVar("T")
-def _lev_distance(list_1: list[T], list_2: list[T]) -> int:
+I = TypeVar("I", bound = Item)
+def _lev_distance(list_1: list[I], list_2: list[I]) -> int:
 
     len_1: int = len(list_1) + 1
     len_2: int = len(list_2) + 1

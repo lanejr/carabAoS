@@ -1,3 +1,4 @@
+from abc import ABCMeta
 from dataclasses import dataclass
 import army_parser as parser
 import unittest
@@ -17,7 +18,18 @@ class Faction:
     name: str
 
 @dataclass(frozen = True, order = True)
-class Warscroll:
+class Item(metaclass = ABCMeta):
+    """
+    An abstract base class representing a generic army list item.
+
+    Each item has a name and a count of its occurrences in an army list.
+    """
+
+    name: str
+    count: int
+
+@dataclass(frozen = True, order = True)
+class Warscroll(Item):
     """ 
     A class representing a warscroll and its number of occurrences.
 
@@ -25,20 +37,14 @@ class Warscroll:
     an army list and the number of times it is reinforced.
     """
 
-    name: str
-    count: int
-
 @dataclass(frozen = True, order = True)
-class Enhancement:
+class Enhancement(Item):
     """
     A class representing an enhancement and its number of occurrences.
 
     Only enhancements applied to warscrolls should qualify - i.e. command 
     traits, artefacts, spells, prayers, and mount traits, and not triumphs.
     """
-
-    name: str
-    count: int
 
 @dataclass(frozen = True)
 class FlatArmyList:
