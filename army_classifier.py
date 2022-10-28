@@ -4,9 +4,11 @@ from typing import TypeVar
 from army_flattener import *
 import unittest
 
+# TODO: add a discursive document explaining hyperparameter selection
+
 ### Data classes ###
 
-@dataclass(frozen = True)
+@dataclass(frozen = True, order = True)
 class Archetype:
     """
     A class representing an army list archetype.
@@ -39,16 +41,12 @@ class KnowledgeBank:
 
 ### Public ###
 
-# TODO: obvious usages:
-# build a knowledge bank from raw lists, (done)
-# classify a raw list, 
-# add newly classified list back into knowledge bank, (done?)
-# import / export knowledge banks?
-
 def classify(
     army_list: FlatArmyList,
     bank: KnowledgeBank,
     k: int = 1,
+    war_weight: int = 2,
+    enh_weight: int = 1,
 ) -> Archetype | None:
     """
     Classify an army list into a particular archetype using a knowledge bank.
@@ -68,7 +66,12 @@ def classify(
         # look only at archetypes of the same faction
         if arc.faction == faction:
             # get distances to each army list in the archetype
-            dists.extend([(_distance(army_list, a_l), arc) for a_l in a_ls])
+            new_dists: list[tuple[int, Archetype]] = [
+                (_distance(army_list, a_l, war_weight, enh_weight), arc) 
+                for a_l 
+                in a_ls
+            ]
+            dists.extend(new_dists)
     
     if len(dists) == 0:
         # no archetypes are found in knowledge bank
@@ -85,7 +88,7 @@ def classify(
 def add_to_bank(
     archetype: Archetype,
     army_list: FlatArmyList,
-    bank: KnowledgeBank = KnowledgeBank({}),
+    bank: KnowledgeBank,
 ) -> KnowledgeBank:
     """
     Add an army list labelled with its archetype into a knowledge bank.
@@ -116,7 +119,7 @@ def _distance(
     enh_weight: int = 1,
 ) -> int:
     """
-    Calculate the levenshtein distance between two army lists.
+    Calculate the Levenshtein distance between two army lists.
 
     Pre-condition: both army lists' warscrolls and enhancements are sorted.
 
@@ -146,22 +149,27 @@ def _lev_distance(list_1: list[I], list_2: list[I]) -> int:
     counts being used for costs - e.g. adding 1 item with count 3 costs 3.
     """
 
+    if len(list_1) == 0:
+        return sum([item.count for item in list_2])
+    elif len(list_2) == 0:
+        return sum([item.count for item in list_1])
+
     # extend lengths by 1 to include row and column 0 in distance matrix
     len_1: int = len(list_1) + 1
     len_2: int = len(list_2) + 1
 
     # initialise all distance matrix values to 0
-    # use a list to represent matrix - dists[i, j] = dists[i + len_2 * j]
+    # use a list to represent matrix - dists[i, j] = dists[i + len_1 * j]
     dists: list[int] = [0 for _ in range(0, len_1 * len_2)]
 
     # row 0 - list_1 becomes empty by deleting everything
     for i in range(1, len_1):
         dists[i] = dists[i - 1] + list_1[i - 1].count
-    
+
     # column 0 - empty becomes list_2 by adding everything
     for j in range(1, len_2):
-        dists[len_2 * j] = dists[len_2 * (j - 1)] + list_2[j - 1].count
-
+        dists[len_1 * j] = dists[len_1 * (j - 1)] + list_2[j - 1].count
+    
     for j in range(1, len_2):
         for i in range(1, len_1):
             # substitution cost
@@ -170,24 +178,120 @@ def _lev_distance(list_1: list[I], list_2: list[I]) -> int:
                 cost = abs(list_1[i - 1].count - list_2[j - 1].count)
 
             # add minimum distance to matrix
-            dists[i + len_2 * j] = min(
+            dists[i + len_1 * j] = min(
                 # delete from list 1
-                dists[(i - 1) + len_2 * j] + list_1[i - 1].count,
+                dists[(i - 1) + len_1 * j] + list_1[i - 1].count,
                 # add from list 2
-                dists[i + len_2 * (j - 1)] + list_2[j - 1].count,
+                dists[i + len_1 * (j - 1)] + list_2[j - 1].count,
                 # substitute
-                dists[(i - 1) + len_2 * (j - 1)] + cost,
+                dists[(i - 1) + len_1 * (j - 1)] + cost,
             )
-
+    
     # final entry in matrix is the minimum distance
-    return dists[(len_1 - 1) + len_2 * (len_2 - 1)]
+    return dists[(len_1 - 1) + len_1 * (len_2 - 1)]
 
 
 ### Tests ###
 
 class __TestArmyClassifier(unittest.TestCase):
 
+    def test_classify(self) -> None:
+        bank: KnowledgeBank = KnowledgeBank({})
+        faction: Faction = Faction("Ogor Mawtribes")
+
+        # build knowledge bank with two prototype army lists
+        archetype_1: Archetype = Archetype(
+            faction = faction,
+            name = "Kragnos Beastclaw Raiders"
+        )
+        prototype_1: FlatArmyList = FlatArmyList(
+            faction = faction,
+            warscrolls = [
+                Warscroll("Kragnos, The End of Empires", 1),
+                Warscroll("Frostlord on Stonehorn", 1),
+            ],
+            enhancements = [],
+        )
+        add_to_bank(archetype_1, prototype_1, bank)
+
+        archetype_2: Archetype = Archetype(
+            faction = faction,
+            name = "Incarnate Beastclaw Raiders"
+        )
+        prototype_2: FlatArmyList = FlatArmyList(
+            faction = faction,
+            warscrolls = [
+                Warscroll('Frostlord on Stonehorn', 1),
+                Warscroll('Krondspine Incarnate of Ghur', 1),
+            ], 
+            enhancements = [],
+        )
+        add_to_bank(archetype_2, prototype_2, bank)
+
+        # Classify an army list of a different faction
+        army_list_0: FlatArmyList = FlatArmyList(
+            faction = Faction("Ironjawz"),
+            warscrolls = [],
+            enhancements = [],
+        )
+        expected: Archetype | None = None
+        result: Archetype | None = classify(army_list_0, bank)
+
+        self.assertEqual(result, expected)
+
+        # Classify an army list of the first archetype
+        army_list_1: FlatArmyList = FlatArmyList(
+            faction = faction,
+            warscrolls = [
+                Warscroll("Frostlord on Stonehorn", 1),
+                Warscroll("Huskard on Stonehorn", 1),
+                Warscroll("Kragnos, The End of Empires", 1),
+                Warscroll("Mournfang Pack", 3),
+            ],
+            enhancements = [
+                Enhancement("Metalcruncher", 1),
+                Enhancement("Nice Drop of the Red Stuff!", 1),
+                Enhancement("Splatter-cleaver", 1),
+            ],
+        )
+
+        expected: Archetype | None = archetype_1
+        result: Archetype | None = classify(army_list_1, bank)
+
+        self.assertEqual(result, expected)
+
+        # Classify an army list of the second archetype
+        army_list_2: FlatArmyList = FlatArmyList(
+            faction = faction,
+            warscrolls = [
+                Warscroll('Frost Sabres', 1),
+                Warscroll('Frostlord on Stonehorn', 1),
+                Warscroll('Krondspine Incarnate of Ghur', 1),
+                Warscroll('Mournfang Pack', 2),
+                Warscroll('Slaughtermaster', 1),
+                Warscroll('Stonehorn Beastriders', 2),
+            ], 
+            enhancements = [
+                Enhancement('Metalcruncher', 1),
+                Enhancement('Molten Entrails', 1),
+                Enhancement('Nice Drop of the Red Stuff!', 1),
+                Enhancement('Ribcracker', 1),
+                Enhancement('Splatter-cleaver', 1),
+            ],
+        )
+
+        expected: Archetype | None = archetype_2
+        result: Archetype | None = classify(army_list_2, bank)
+
+        self.assertEqual(result, expected)
+
+        # no classified army lists should be in the bank
+        self.assertEqual(len(bank.data.keys()), 2)
+        for a_ls in bank.data.values():
+            self.assertEqual(len(a_ls), 1)
+
     def test_add_to_bank(self) -> None:
+        bank: KnowledgeBank = KnowledgeBank({})
         faction: Faction = Faction("Ogor Mawtribes")
 
         # Add an army of one archetype
@@ -209,9 +313,10 @@ class __TestArmyClassifier(unittest.TestCase):
                 Enhancement("Metalcruncher", 1),
             ],
         )
-        bank: KnowledgeBank = add_to_bank(
+        add_to_bank(
             archetype = archetype_1,
             army_list = army_list_1,
+            bank = bank,
         )
 
         # Add an army of a second archetype but the same faction
@@ -227,7 +332,7 @@ class __TestArmyClassifier(unittest.TestCase):
                 Warscroll('Mournfang Pack', 2),
                 Warscroll('Stonehorn Beastriders', 2),
                 Warscroll('Frost Sabres', 1),
-                Warscroll('Krondspine Incarnate of Ghur', 1)
+                Warscroll('Krondspine Incarnate of Ghur', 1),
             ], 
             enhancements = [
                 Enhancement('Nice Drop of the Red Stuff!', 1),
@@ -318,6 +423,42 @@ class __TestArmyClassifier(unittest.TestCase):
             war_weight = war_weight, 
             enh_weight = enh_weight,
         )
+
+    def test_lev_distance(self) -> None:
+        # empty lists give 0 distance
+        l_1: list[Warscroll] = []
+        l_2: list[Warscroll] = []
+
+        self.assertEqual(_lev_distance(l_1, l_2), 0)
+
+        # one empty list gives the total count of the other
+        l_1: list[Warscroll] = [
+            Warscroll("Frostlord on Stonehorn", 1),
+            Warscroll("Huskard on Stonehorn", 1),
+            Warscroll("Kragnos, The End of Empires", 1),
+            Warscroll("Mournfang Pack", 3),
+        ]
+        l_2: list[Warscroll] = []
+
+        self.assertEqual(_lev_distance(l_1, l_2), 6)
+        self.assertEqual(_lev_distance(l_2, l_1), 6)
+
+        # two non-empty lists give the correct distance
+        l_1: list[Warscroll] = [
+            Warscroll("Frostlord on Stonehorn", 1),
+            Warscroll("Huskard on Stonehorn", 1),
+            Warscroll("Kragnos, The End of Empires", 1),
+            Warscroll("Mournfang Pack", 3),
+        ]
+        l_2: list[Warscroll] = [
+            Warscroll("Frostlord on Stonehorn", 1),
+            Warscroll("Kragnos, The End of Empires", 1),
+            Warscroll("Stonehorn Beastriders", 2),
+        ]
+
+        # TODO: fix issues with non square matrices
+        self.assertEqual(_lev_distance(l_1, l_2), 6)
+        self.assertEqual(_lev_distance(l_2, l_1), 6)
 
 
 if __name__ == '__main__':
