@@ -125,37 +125,47 @@ def _distance(
 
 I = TypeVar("I", bound = Item)
 def _lev_distance(list_1: list[I], list_2: list[I]) -> int:
+    """
+    Levenshtein distance between two lists of army list items.
 
+    In most cases the two lists should be sorted for best results.
+
+    A mostly standard Levenshtein distance implementation, notable choices are
+    substitution cost being no less than addition and deletion, and item counts
+    being used for costs - e.g. adding a single item with count 3 costs 3.
+    """
+
+    # extend lengths by 1 to include row and column 0 in distance matrix
     len_1: int = len(list_1) + 1
     len_2: int = len(list_2) + 1
 
-    # initialise distance matrix to 0
+    # initialise all distance matrix values to 0
     # use a list to represent matrix - dists[i, j] = dists[i + len_2 * j]
     dists: list[int] = [0 for _ in range(0, len_1 * len_2)]
 
-    # list_1 becomes empty by deleting everything
+    # row 0 - list_1 becomes empty by deleting everything
     for i in range(1, len_1):
         dists[i] = dists[i - 1] + list_1[i - 1].count
     
-    # empty becomes list_2 by adding everything
+    # column 0 - empty becomes list_2 by adding everything
     for j in range(1, len_2):
         dists[len_2 * j] = dists[len_2 * (j - 1)] + list_2[j - 1].count
 
-    for j in range(0, len_2 - 1):
-        for i in range(0, len_1 - 1):
+    for j in range(1, len_2):
+        for i in range(1, len_1):
             # substitution cost
-            cost: int = list_1[i].count + list_2[j].count
-            if list_1[i].name == list_2[j].name:
-                cost = abs(list_1[i].count - list_2[j].count)
+            cost: int = list_1[i - 1].count + list_2[j - 1].count
+            if list_1[i - 1].name == list_2[j - 1].name:
+                cost = abs(list_1[i - 1].count - list_2[j - 1].count)
 
-            # add distance to matrix, using previous entries
-            dists[(i + 1) + len_2 * (j + 1)] = min(
+            # add minimum distance to matrix
+            dists[i + len_2 * j] = min(
                 # delete from list 1
-                dists[i + len_2 * (j + 1)] + list_1[i].count,
+                dists[(i - 1) + len_2 * j] + list_1[i - 1].count,
                 # add from list 2
-                dists[(i + 1) + len_2 * j] + list_2[j].count,
+                dists[i + len_2 * (j - 1)] + list_2[j - 1].count,
                 # substitute
-                dists[i + len_2 * j] + cost,
+                dists[(i - 1) + len_2 * (j - 1)] + cost,
             )
 
     # final entry in matrix is the minimum distance
