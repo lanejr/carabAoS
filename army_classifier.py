@@ -1,3 +1,4 @@
+from collections import Counter
 from dataclasses import dataclass
 from typing import TypeVar
 from army_flattener import *
@@ -48,7 +49,7 @@ def classify(
     army_list: FlatArmyList,
     bank: KnowledgeBank,
     k: int = 1,
-):
+) -> Archetype | None:
     """
     Classify an army list into a particular archetype using a knowledge bank.
 
@@ -62,17 +63,24 @@ def classify(
     """
 
     faction: Faction = army_list.faction
-    dists = {}
-    for archetype, army_lists in bank.data.items():
+    dists: list[tuple[int, Archetype]] = []
+    for arc, a_ls in bank.data.items():
         # look only at archetypes of the same faction
-        if archetype.faction == faction:
+        if arc.faction == faction:
             # get distances to each army list in the archetype
-            dists[archetype] = [_distance(army_list, a_l) for a_l in army_lists]
+            dists.extend([(_distance(army_list, a_l), arc) for a_l in a_ls])
     
-    # TODO: find the smallest k dists, and their archetypes, then assign highest count
+    if len(dists) == 0:
+        # no archetypes are found in knowledge bank
+        return None
+    else:
+        # sort the distances in ascending order
+        dists.sort()
 
-    # TODO
-    pass
+        # take the closest k archetypes and find the most common
+        counted: Counter[Archetype] = Counter([arc for _, arc in dists[0:k]])
+        arc: Archetype = counted.most_common(1)[0][0]
+        return arc
 
 def add_to_bank(
     archetype: Archetype,
@@ -97,6 +105,9 @@ def add_to_bank(
 
     # return the modified knowledge bank
     return bank
+
+
+### Private ###
 
 def _distance(
     army_list_1: FlatArmyList,
@@ -131,8 +142,8 @@ def _lev_distance(list_1: list[I], list_2: list[I]) -> int:
     In most cases the two lists should be sorted for best results.
 
     A mostly standard Levenshtein distance implementation, notable choices are
-    substitution cost being no less than addition and deletion, and item counts
-    being used for costs - e.g. adding a single item with count 3 costs 3.
+    substitution being costed equivalent to addition plus deletion, and item 
+    counts being used for costs - e.g. adding 1 item with count 3 costs 3.
     """
 
     # extend lengths by 1 to include row and column 0 in distance matrix
@@ -175,58 +186,6 @@ def _lev_distance(list_1: list[I], list_2: list[I]) -> int:
 ### Tests ###
 
 class __TestArmyClassifier(unittest.TestCase):
-
-    def test_distance(self) -> None:
-        faction: Faction = Faction("Ogor Mawtribes")
-
-        army_list_1: FlatArmyList = FlatArmyList(
-            faction = faction,
-            warscrolls = [
-                Warscroll("Frostlord on Stonehorn", 1),
-                Warscroll("Huskard on Stonehorn", 1),
-                Warscroll("Kragnos, The End of Empires", 1),
-                Warscroll("Mournfang Pack", 3),
-            ],
-            enhancements = [
-                Enhancement("Metalcruncher", 1),
-                Enhancement("Nice Drop of the Red Stuff!", 1),
-                Enhancement("Splatter-cleaver", 1),
-            ],
-        )
-
-        army_list_2: FlatArmyList = FlatArmyList(
-            faction = faction,
-            warscrolls = [
-                Warscroll("Frostlord on Stonehorn", 1),
-                Warscroll("Kragnos, The End of Empires", 1),
-                Warscroll("Mournfang Pack", 1),
-                Warscroll("Stonehorn Beastriders", 2),
-            ],
-            enhancements = [
-                Enhancement("Black Clatterhorn", 1),
-                Enhancement("Nice Drop of the Red Stuff!", 1),
-                Enhancement("Splatter-cleaver", 1),
-            ],
-        )
-
-        # Warscrolls: delete 2 Mournfang Packs and 1 Huskard on Stonehorn, and 
-        # add 2 Stonehorn Beastriders
-        # Enhancements: substitute 1 Metalcruncher for 1 Black Clatterhorn
-        expected: int = 5 + 2
-        result: int = _distance(army_list_1, army_list_2)
-
-        self.assertEqual(result, expected)
-
-        # weighting warscrolls as 3 and enhancements as 2
-        war_weight: int = 3
-        enh_weight: int = 2
-        expected: int = (5 * war_weight) + (2 * enh_weight)
-        result: int = _distance(
-            army_list_1 = army_list_1, 
-            army_list_2 = army_list_2, 
-            war_weight = war_weight, 
-            enh_weight = enh_weight,
-        )
 
     def test_add_to_bank(self) -> None:
         faction: Faction = Faction("Ogor Mawtribes")
@@ -307,6 +266,58 @@ class __TestArmyClassifier(unittest.TestCase):
 
         self.assertEqual(bank.data[archetype_1], [army_list_1, army_list_3])
         self.assertEqual(bank.data[archetype_2], [army_list_2])
+
+    def test_distance(self) -> None:
+        faction: Faction = Faction("Ogor Mawtribes")
+
+        army_list_1: FlatArmyList = FlatArmyList(
+            faction = faction,
+            warscrolls = [
+                Warscroll("Frostlord on Stonehorn", 1),
+                Warscroll("Huskard on Stonehorn", 1),
+                Warscroll("Kragnos, The End of Empires", 1),
+                Warscroll("Mournfang Pack", 3),
+            ],
+            enhancements = [
+                Enhancement("Metalcruncher", 1),
+                Enhancement("Nice Drop of the Red Stuff!", 1),
+                Enhancement("Splatter-cleaver", 1),
+            ],
+        )
+
+        army_list_2: FlatArmyList = FlatArmyList(
+            faction = faction,
+            warscrolls = [
+                Warscroll("Frostlord on Stonehorn", 1),
+                Warscroll("Kragnos, The End of Empires", 1),
+                Warscroll("Mournfang Pack", 1),
+                Warscroll("Stonehorn Beastriders", 2),
+            ],
+            enhancements = [
+                Enhancement("Black Clatterhorn", 1),
+                Enhancement("Nice Drop of the Red Stuff!", 1),
+                Enhancement("Splatter-cleaver", 1),
+            ],
+        )
+
+        # Warscrolls: delete 2 Mournfang Packs and 1 Huskard on Stonehorn, and 
+        # add 2 Stonehorn Beastriders
+        # Enhancements: substitute 1 Metalcruncher for 1 Black Clatterhorn
+        expected: int = 5 + 2
+        result: int = _distance(army_list_1, army_list_2)
+
+        self.assertEqual(result, expected)
+
+        # weighting warscrolls as 3 and enhancements as 2
+        war_weight: int = 3
+        enh_weight: int = 2
+        expected: int = (5 * war_weight) + (2 * enh_weight)
+        result: int = _distance(
+            army_list_1 = army_list_1, 
+            army_list_2 = army_list_2, 
+            war_weight = war_weight, 
+            enh_weight = enh_weight,
+        )
 
 
 if __name__ == '__main__':
