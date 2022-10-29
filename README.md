@@ -2,6 +2,8 @@
 
 A toolbox for solving a variety of niche problems related to AoS (Warhammer: Age of Sigmar).
 
+Carabaos are domestic swamp-type water buffalos, and ther name contains 'AoS' - it's a bad pun.
+
 ## Summary
 
 ### What is in the toolbox?
