@@ -45,6 +45,7 @@ def classify(
     army_list: FlatArmyList,
     bank: KnowledgeBank,
     k: int = 1,
+    dist_weighted: bool = False,
     war_weight: int = 2,
     enh_weight: int = 1,
 ) -> Archetype | None:
@@ -52,12 +53,18 @@ def classify(
     Classify an army list into a particular archetype using a knowledge bank.
 
     If no archetypes of the same faction as the passed army list exist in the
-    knowledge bank 'None' is returned.
+    knowledge bank 'None' is returned, otherwise the majority voted archetype.
 
     The labelled army list is not added to the knowledge bank.
 
     k-nearest neighbours is used for classification, with proximity
     defined using the Levenshtein distance between two army lists.
+
+    Hyperparameters:
+    k             - the number of neighbours that vote on the archetype;
+    dist_weighted - whether to weight the votes by their inverse distance;
+    war_weight    - weight of each warscroll distance;
+    enh_weight    - weight of each enhancement distance.
     """
 
     faction: Faction = army_list.faction
@@ -81,8 +88,14 @@ def classify(
         dists.sort()
 
         # take the closest k archetypes and find the most common
-        counted: Counter[Archetype] = Counter([arc for _, arc in dists[0:k]])
-        arc: Archetype = counted.most_common(1)[0][0]
+        arc: Archetype
+        if dist_weighted:
+            # weight votes by distance
+            arc = _weighted_vote(dists[0:k])
+        else:
+            # treat each vote equally
+            counts: Counter[Archetype] = Counter([arc for _, arc in dists[0:k]])
+            arc = counts.most_common(1)[0][0]
         return arc
 
 def add_to_bank(
@@ -189,6 +202,23 @@ def _lev_distance(list_1: list[I], list_2: list[I]) -> int:
     
     # final entry in matrix is the minimum distance
     return dists[(len_1 - 1) + len_1 * (len_2 - 1)]
+
+def _weighted_vote(dists: list[tuple[int, Archetype]]) -> Archetype:
+    # weight by inverse distance
+    w_dists: list[tuple[float, Archetype]] = [
+        ((1.0 / d), arc)
+        for d, arc 
+        in dists
+    ]
+
+    # count votes for each archetype
+    votes: dict[Archetype, float] = {}
+    for w_d, arc in w_dists:
+        v: float = votes.setdefault(arc, 0.0)
+        votes[arc] = v + w_d
+    
+    # return the archetype with the most votes
+    return max(votes, key = votes.get) # type: ignore
 
 
 ### Tests ###
@@ -459,6 +489,38 @@ class __TestArmyClassifier(unittest.TestCase):
         # TODO: fix issues with non square matrices
         self.assertEqual(_lev_distance(l_1, l_2), 6)
         self.assertEqual(_lev_distance(l_2, l_1), 6)
+    
+    def test_weighted_vote(self) -> None:
+        archetype_1: Archetype = Archetype(Faction("A"), "A")
+        archetype_2: Archetype = Archetype(Faction("B"), "B")
+        dists: list[tuple[int, Archetype]]
+
+        # closest vote wins
+        # 1/2 > 1/4 + 1/5
+        dists = [
+            (2, archetype_1),
+            (4, archetype_2),
+            (5, archetype_2),
+        ]
+        self.assertEqual(_weighted_vote(dists), archetype_1)
+
+        # votes are tied, choose closest
+        # 1/2 = 1/4 + 1/4
+        dists = [
+            (2, archetype_1),
+            (4, archetype_2),
+            (4, archetype_2),
+        ]
+        self.assertEqual(_weighted_vote(dists), archetype_1)
+
+        # further votes win
+        # 1/2 < 1/3 + 1/4
+        dists = [
+            (2, archetype_1),
+            (3, archetype_2),
+            (5, archetype_2),
+        ]
+        self.assertEqual(_weighted_vote(dists), archetype_2)
 
 
 if __name__ == '__main__':
