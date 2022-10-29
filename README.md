@@ -8,8 +8,9 @@ Carabaos are domestic swamp-type water buffalos, and ther name contains 'AoS' - 
 
 ### What is in the toolbox?
 
-- [Army list parser](#army-list-parser)
+- [Army list classifier](#army-list-classifier)
 - [Army list flattener](#army-list-flattener)
+- [Army list parser](#army-list-parser)
 
 ### Who is this for?
 
