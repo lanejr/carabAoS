@@ -22,7 +22,7 @@ I have no plans to build nice user interfaces or host websites, so my goal is fo
 
 ### How should the tools be used?
 
-As alluded to, the ways I'd expect these tools to be used will require a bit of Python knowledge, albeit (hopefully) a small amount. From there, for direct use each tool includes a small how-to guide (to-do!), and for remixing them into your own projects the code is documented and commented where relevant.
+As alluded to, the ways I'd expect these tools to be used will require a bit of Python knowledge, albeit (hopefully) a small amount. From there, for direct use each tool includes a small how-to guide, and for remixing them into your own projects the code is documented and commented where relevant.
 
 
 ## Tools
@@ -33,7 +33,7 @@ Classify an army into an established archetype.
 
 Referring to army lists by their archetype is common parlance amongst competitive players in particular, but many statistics are measured and reported at the faction level. This tool provides a robust and easy to use mechanism for automatically classifying an army list into a defined archetype.
 
-The approach used, and guidance on parameter settings and data management are discussed [here](/doc/classification.md).
+The approach used, and guidance on parameter settings and data management are discussed [here](/doc/classification.md), and a practical example of using the tool is explained [here](/doc/how_to_classify.md).
 
 ### Army list flattener
 

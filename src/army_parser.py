@@ -116,7 +116,7 @@ def _header():
         string("Units") ^\
         string("Behemoths") ^\
         string("Artillery") ^\
-        string("Spells")
+        string("Endless Spells & Invocations")
     return header
 
 @generate

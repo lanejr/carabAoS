@@ -2,6 +2,8 @@
 
 This document will briefly touch on the motivation, then discuss the thought process behind the techniques used by the army classifier tool. It will also give some guidance on hyperparameter tuning and knowledge bank curation, which are both fundamental to the classifier's effectiveness.
 
+For a more practical example, there is a how-to guide [here](how_to_classify.md) - for serious use of the tool I encourage reading both documents at some point.
+
 ## Motivation
 
 Army list archetypes are not a novel concept, many players will have heard nicknames like 'Morathi and bow snakes', 'Nurgle flies', and even whimsical ones like 'oops all Magmadroths'. Immediately upon hearing one of these archetypes a competitive player will have a strong idea of what most of the army list being referred to looks like. They are a very useful communicative tool for quickly describing an army and how it plays.
@@ -80,7 +82,7 @@ On the topic of larger data sets, if one archetype is much more common than anot
 
 In this tool, we use inverse distance weighting, i.e. `weight = 1/d`, when counting votes if this parameter is enabled. This gives closer neighbours a much stronger vote than further neighbours, meaning a single very close point can out-vote several further points, overcoming the problem of skewed archetype distributions.
 
-As before, if the data set is small and curated such that there is no archetype dominance then this extra step would not be necessary. Alternatively, in some cases it may be desirable to have this biased classification, where a dominant archetype in the data set reflects the real world popularity of that archetype, and actually aids in classification.
+As before, if the data set is small and curated such that there is no archetype dominance then this extra step would not be necessary. Alternatively, in some cases it may be desirable to have this biased classification, where a dominant archetype in the data set reflects the real world popularity of that archetype, and actually aids in classification. Finally, for the special case where 'k' is `1`, this distance weighting has no effect.
 
 ### Warscroll and Enhancement Weights
 
@@ -109,3 +111,5 @@ Using this approach we still benefit from lazy learning's adaptability, but neve
 ## Closing Thoughts
 
 The approach described here is unlikely to be perfect, and will require tuning and further iteration, and may ultimately be superseded by an alternative method. My primary goal is to encourage innovation and experimentation in this area for the benefit of everyone in the community, so I welcome new ideas, collaboration, criticism, and others to build upon and challenge the approaches discussed.
+
+To see the tool in action, there is a small worked example [here](how_to_classify.md).
