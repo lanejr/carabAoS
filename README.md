@@ -18,7 +18,7 @@ These tools are written in Python (as opposed to Rust <3) for accessibility. If 
 
 ### Why did I make this?
 
-I have no plans to build nice user interfaces or host websites, so my goal is for these tools to provide value to the community through either private use, or as part of an existing (or upcoming) website - all I ask for in return is accreditation.
+I have no plans to build nice user interfaces or host websites, so my goal is for these tools to provide value to the community through either private use, or as part of an existing (or upcoming) website or tool - all I ask for in return is accreditation, and I'd love to hear about what you've built using these tools.
 
 ### How should the tools be used?
 

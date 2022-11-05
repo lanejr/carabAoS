@@ -1,12 +1,12 @@
 # How to Classify Army Lists
 
-This document will loosely guide a user through one approach for setting up a knowledge bank, tuning parameters, and classifying some army lists, all with the `army_classifier` tool. We will focus on some Maggotkin of Nurgle armies as a worked example, these will inevitably be out of date but hopefully illustrative nonetheless. This guide may appear long due to all of the embedded army lists, but the content is kept concise.
+This document will loosely guide a user through one approach for setting up a knowledge bank, tuning parameters, and classifying some army lists, all with the `army_classifier` tool. We will focus on some 'Maggotkin of Nurgle' armies as a worked example, these will inevitably be out of date but hopefully illustrative nonetheless. This guide may appear long due to all of the embedded army lists, but the content is kept concise.
 
 ## Decide on an Approach
 
 There are a variety of approaches that the classifier tool supports, centering around how the training data set (knowledge bank) is built and maintained, and the classifier parameters chosen. These are described and explained in more depth [here](classification.md).
 
-For our worked example we will choose an approach where our knowledge bank consists of prototype army lists only. Therefore we will take 'k' as `1`, expecting only a single very close neighbour data point for each classification; keep distance weighting disabled as it has no effect when looking at a single neighbour; and setting warscroll weight to `1` and enhancement weight to `0`, i.e. enhancements carry no weight during comparisons, just to keep things simple.
+For our worked example we will choose an approach where our knowledge bank consists of prototype army lists only. Therefore we will take 'k' as `1`, expecting only a single very close neighbour data point for each classification; keep distance weighting disabled as it has no effect when looking at a single neighbour; and set warscroll weight to `1` and enhancement weight to `0`, i.e. enhancements carry no weight during comparisons, just to keep things simple.
 
 The meaning of some of these choices will become clearer as we work through our example, or by reading the linked explanatory document.
 
@@ -14,7 +14,7 @@ The meaning of some of these choices will become clearer as we work through our 
 
 Now we have an idea about how our knowledge bank will be set up, maintained, and used to classify new data, we can go ahead and start building.
 
-For our Maggotkin of Nurgle (MoN) example, we will identify two archetypes into which we want to classify new army lists: `Flies` and `Rot Coven`. 
+For our Maggotkin of Nurgle example, we will identify two archetypes into which we want to classify new army lists: `Flies` and `Rot Coven`. 
 
 Let's first set up our empty knowledge bank and add our two archetypes:
 ```
@@ -27,7 +27,7 @@ Let's first set up our empty knowledge bank and add our two archetypes:
 
 Next, for our approach of using prototype data points, we need to define a prototype army list for each archetype. As a kind of 'training data' we will look at two real army lists <sup>[1](#list-1), [2](#list-2)</sup> - these will guide our prototype definitions.
 
-To get our army lists in a flattened format for insertion into the knowledge bank, we can use the `army_flattener` tool - guidance is given [here](how_to_flatten.md) for how to do this. Once we have our flattened list, we can remove the warscrolls and enhancements we've decided to ignore for our prototypes. Alternatively, these could be hand-written.
+To get our army lists in a flattened format for insertion into the knowledge bank, we can use the `army_flattener` tool - guidance is given [here](how_to_flatten.md) for how to do this. Once we have our flattened list, we can remove the warscrolls and enhancements we've decided to ignore for our prototype. Alternatively, these could be hand-written.
 
 ### Create the Prototypes
 
@@ -65,7 +65,7 @@ FlatArmyList(
 
 Our goal with prototype creation is to define data points that will accurately classify any new army lists, so reducing 'noise' from non-essential warscrolls will help massively. As an example, the `Rot Coven` list <sup>[1](#list-1)</sup> contains `Pusgoyle Blightlords` as well, however they are not fundamental to the army's behaviour - it would play similarly if they were substituted for another unit. Including them in our prototype would just create noise, and blur the line between our two archetypes. The key here is carving away any pieces that are not essential to the army's playstyle.
 
-As a rule of thumb it is good to keep the sizes of competing prototypes similar - we can see the total count of features for our `Rot Coven` prototype is `6`, and for our `Flies` prototype is `5`. We'll explore an example later where a dissimilar count causes classification issues.
+As a rule of thumb it is good to keep the sizes of competing prototypes similar - we can see the total count of features for our `Rot Coven` prototype is `6`, and for our `Flies` prototype is `5`. We'll explore an example [later](#a-naive-approach) where a dissimilar count causes classification issues.
 
 ### Add the Prototypes to the Knowledge Bank
 
@@ -114,7 +114,8 @@ Additionally, the setup we've done so far works well for incrementally building 
 
 For example:
 ```
->>> bank = KnowledgeBank({ ... paste data here ... })
+>>> bank = KnowledgeBank(data = { ... paste data here ... })
+>>>
 ```
 
 ## Classify some Army Lists
@@ -133,7 +134,7 @@ First the `Rot Coven` list <sup>[1](#list-1)</sup>:
 Archetype(faction=Faction(name='Maggotkin of Nurgle'), name='Rot Coven')
 >>>
 ```
-which is correctly classified using our minimised prototype.
+which we see is correctly classified.
 
 And next the `Flies` list <sup>[2](#list-2)</sup>:
 ```
@@ -141,9 +142,7 @@ And next the `Flies` list <sup>[2](#list-2)</sup>:
 Archetype(faction=Faction(name='Maggotkin of Nurgle'), name='Flies')
 >>>
 ```
-which is also correctly classified by our knowledge bank and parameters.
-
-As an exercise, it is relatively straightforward to look at the flattened lists compared to the knowledge bank prototypes and reason through how each classification would be done.
+which is also correctly classified.
 
 ### Classify a New Army List
 
@@ -172,6 +171,12 @@ Archetype(faction=Faction(name='Maggotkin of Nurgle'), name='Flies')
 
 Knowing this is a variant of the `Flies` archetype it makes sense that it is classified as such using the current knowledge bank.
 
+We can set up our new archetype now:
+```
+>>> belakor = Archetype(faction = Faction(name = 'Maggotkin of Nurgle'), name = 'Be’Lakor')
+>>>
+```
+
 ### A Naive Approach
 
 To illustrate the reasoning behind the suggestion to keep each prototype a similar size, discussed earlier when [evaluating our prototypes](#evaluate-the-prototypes), we'll start with a very small prototype and see why that does not work as expected.
@@ -180,7 +185,6 @@ Let's assume we naively decide that `Be’Lakor, the Dark Master` is the crucial
 
 ```
 >>> naive_bank = KnowledgeBank(data = bank.data.copy())
->>> belakor = Archetype(faction = Faction(name = 'Maggotkin of Nurgle'), name = 'Be’Lakor')
 >>> naive_belakor_proto = FlatArmyList(faction = Faction(name = 'Maggotkin of Nurgle'), warscrolls = [Warscroll(name = 'Be’Lakor, the Dark Master', count = 1)], enhancements = [])
 >>> add_to_bank(archetype = belakor, army_list = naive_belakor_proto, bank = naive_bank)
 ```
@@ -220,7 +224,7 @@ Archetype(faction=Faction(name='Maggotkin of Nurgle'), name='Be’Lakor')
 
 Our new list<sup>[4](#list-4)</sup> is now classified as we intended - why? Since the `Be’Lakor` prototype contains all of the warscrolls in the `Flies` prototype plus `Be’Lakor, the Dark Master`, that additional warscroll in common pushes the 'closeness' metric in favour of the `Be’Lakor` archetype. We now have `5` votes for `Flies` and `6` votes for `Be’Lakor`.
 
-The inverse also holds, if we attempt to re-classify one of our previously classified `Flies` army lists that don't contain `Be’Lakor, the Dark Master`, they will still be classified as `Flies`. This is because even though they would have equal votes for common warscrolls (`5` each), having `Be’Lakor, the Dark Master` as a dissimilar warscroll counts as a vote _against_ the closeness of the `Be’Lakor` prototype.
+The inverse also holds, if we attempt to re-classify one of our previously classified `Flies` army lists that don't contain `Be’Lakor, the Dark Master`, they will still be classified as `Flies`. This is because even though they would have equal votes for common warscrolls, having `Be’Lakor, the Dark Master` as a dissimilar warscroll counts as a vote _against_ the closeness of the `Be’Lakor` prototype.
 
 This example is a bit contrived, but hopefully shows the pitfalls of having dissimilarly sized prototypes, and some intuition for how to reason about the army list 'closeness' metric used in classification. Again, for more thoroughly explained examples of this metric, see [this document](classification.md).
 
@@ -234,27 +238,25 @@ For any readers who are actively following the example, I've included an additio
 
 ### Extending the Prototype Approach
 
-An obvious extension to the example discussed here would be adding key archetypes for all of the other factions. If we limit our focus just to the competitive scene, it is reasonable to expect perhaps one to three viable archetypes for each faction at any point in the meta. This means manual creation and maintenance of the knowledge bank is actually a reasonable endeavour.
+An obvious extension to the example discussed here would be adding common archetypes, and their corresponding prototypes, for all of the other factions. If we limit our focus just to the competitive scene, it is reasonable to expect perhaps one to three viable archetypes for each faction at any point in the meta. This means manual creation and maintenance of the knowledge bank is actually a reasonable endeavour.
 
 With a classifier set up like this, tournament lists could be automatically fed through to determine their archetypes, with that classification used to label their results. Then, win rates and other statistics could be broken down by army list archetype rather than by faction, giving a more transparent view of the metagame and how it shifts.
 
 ### A Big Data Approach
 
-An alternative approach to classification would be simply using raw army lists in the knowledge bank. A setup using a higher value of `k`, with a knowledge bank containing every army list classified, could also be a valid approach and is supported by the tool.
+An alternative approach to classification would be using a large number of raw army lists in the knowledge bank. This could mean a classifier setup using a higher value of 'k' and a knowledge bank containing every army list classified, and is supported by the tool as well.
 
-The initial knowledge bank would take more effort to label the original data points with their archetypes, but no decision making regarding creating army list 'prototypes'. Arguably prototypes are yet another configurable (and complex) parameter to tune, so removing that step may be appealing, especially for a more automated approach.
+The initial knowledge bank would likely have to be larger, and so take more effort to label every data point with an archetype, but would require no decision making regarding creating army list prototypes. Arguably prototypes are yet another configurable (and complex) parameter to tune, so removing that step may be appealing, especially for a more automated approach.
 
-Then, newly classified army lists can also be added straight to the knowledge bank with their assigned archetype, and the data set gets bigger and stronger with each classification.
+Then, newly classified army lists can be added straight to the knowledge bank with their assigned archetype, and the data set gets bigger and potentially better at classifying future data with each new classification performed.
 
-Given the knowledge bank continually grows, data pruning is probably prudent with this approach, which is discussed to a lesser extent [here](classification.md). There are algorithms for performing pruning, or it can be done manually.
+Given that the knowledge bank continually grows, data pruning is probably prudent with this approach, which is discussed to some extent [here](classification.md). There are algorithms for performing pruning, or it can be done manually, with the goal being to maintain (or even improve) classification accuracy with some subset of the total data set.
 
 ### Use as a Building Block
 
-I've alluded to some uses for classification that I think are cool, but the classifier tool could easily be included in other projects to serve a variety of purposes, which I highly encourage.
+I've alluded to some uses for classification that I think are cool, but the classifier tool could easily be included in other projects to serve a variety of purposes. As a more metaphorical building block, the classification approach here could also be treated as a proof of concept, and inspire new and better approaches perhaps using other areas of statistics or machine learning. Both of which I highly encourage.
 
-As a more metaphorical building block, the classification approach here could also be treated as a proof of concept, and inspire a new and better approaches perhaps using other areas of statistics or machine learning, which I also encourage.
-
-To either end, the algorithms and data structures used by this tool are very simple and don't rely on libraries that put any behaviour in a 'black box', with the intent that a reader can quickly understand the inner workings of the tool and use it to further their own projects.
+To either end, the algorithms and data structures used by this tool are very simple and don't rely on libraries that put any behaviour in a 'black box', with the intent that a reader can quickly understand the inner workings of the tool and use it to further their own projects, in whichever language or framework they prefer.
 
 
 ## Appendix
