@@ -27,6 +27,8 @@ As alluded to, the ways I'd expect these tools to be used will require a bit of 
 
 ## Tools
 
+NB: Tools taking army lists as input currently only work with army lists exported by the Warhammer community [warscroll builder](https://www.warhammer-community.com/warscroll-builder/), or following that format. 
+
 ### Army list classifier
 
 Classify an army into an established archetype.
@@ -48,8 +50,6 @@ A practical guide to flattening an army list can be found [here](/doc/how_to_fla
 ### Army list parser
 
 Parse an army list into manipulable data classes. 
-
-The parser works with army lists exported by the Warhammer community [warscroll builder](https://www.warhammer-community.com/warscroll-builder/), or following that format. 
 
 The current feature set is the minimum to support the list flattener. However, since the parser is combinatorial, the building blocks are easily composed to extend the functionality.
 
